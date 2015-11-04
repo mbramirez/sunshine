@@ -3,12 +3,16 @@ package com.example.android.sunshine.app;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ShareActionProvider;
 import android.widget.TextView;
 
 public class DetailActivity extends ActionBarActivity {
@@ -52,7 +56,11 @@ public class DetailActivity extends ActionBarActivity {
      */
     public static class DetailFragment extends Fragment {
 
+        private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+        private String mForecastStr;
+
         public DetailFragment() {
+            setHasOptionsMenu(true);
         }
 
         @Override
@@ -64,12 +72,37 @@ public class DetailActivity extends ActionBarActivity {
             Intent intent = getActivity().getIntent();
 
             if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-                String forecastText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                mForecastStr = intent.getStringExtra(Intent.EXTRA_TEXT);
                 ((TextView) rootView.findViewById(R.id.detail_text))
-                        .setText(forecastText);
+                        .setText(mForecastStr);
             }
 
             return rootView;
+        }
+
+        @Override
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            inflater.inflate(R.menu.detailfragment, menu);
+
+            MenuItem item = menu.findItem(R.id.action_share);
+
+            android.support.v7.widget.ShareActionProvider mShareActionProvider =
+                    (android.support.v7.widget.ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
+            if (mShareActionProvider != null) {
+                mShareActionProvider.setShareIntent(createShareForecastIntent());
+            } else {
+                Log.d(LOG_TAG, "Error: Something went wrong");
+            }
+        }
+
+        private Intent createShareForecastIntent() {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.addFlags((Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET));
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, mForecastStr);
+
+            return intent;
         }
     }
 }
